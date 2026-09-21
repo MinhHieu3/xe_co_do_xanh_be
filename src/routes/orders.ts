@@ -72,25 +72,30 @@ router.delete('/:id', async (c) => {
 
 // Business Logic: Assign vehicles to order
 router.post('/:id/assign-vehicles', async (c) => {
-  const db = drizzle(c.env.DB);
-  const id_order = Number(c.req.param('id'));
-  const { vehicle_ids, des_1, des_2 } = await c.req.json<{ vehicle_ids: number[], des_1?: string, des_2?: string }>();
+  try {
+    const db = drizzle(c.env.DB);
+    const id_order = Number(c.req.param('id'));
+    const body = await c.req.json();
+    const { vehicle_ids, des_1, des_2 } = body;
 
-  if (!vehicle_ids || vehicle_ids.length === 0) {
-    return c.json({ success: false, message: 'vehicle_ids is required' }, 400);
+    if (!vehicle_ids || vehicle_ids.length === 0) {
+      return c.json({ success: false, message: 'vehicle_ids is required' }, 400);
+    }
+
+    const rentalResult = await db.insert(rentals).values({
+      id_order,
+      vehicle_ids,
+      payment: false,
+      des_1: des_1 || null,
+      des_2: des_2 || null
+    }).returning().get();
+
+    await db.update(vehicles).set({ status: true }).where(inArray(vehicles.id, vehicle_ids)).run();
+
+    return c.json({ success: true, message: 'Vehicles assigned', rental: rentalResult });
+  } catch (error: any) {
+    return c.json({ success: false, message: error.message, stack: error.stack }, 400);
   }
-
-  const rentalResult = await db.insert(rentals).values({
-    id_order,
-    vehicle_ids,
-    payment: false,
-    des_1,
-    des_2
-  }).returning().get();
-
-  await db.update(vehicles).set({ status: true }).where(inArray(vehicles.id, vehicle_ids)).run();
-
-  return c.json({ success: true, message: 'Vehicles assigned', rental: rentalResult });
 });
 
 // Business Logic: Checkout and Return vehicles
@@ -99,10 +104,14 @@ router.post('/:id/checkout', async (c) => {
   const id_order = Number(c.req.param('id'));
 
   let amount = 0;
+  let note = '';
   try {
     const body = await c.req.json();
     if (body && body.amount) {
       amount = Number(body.amount) || 0;
+    }
+    if (body && body.note) {
+      note = body.note;
     }
   } catch (e) {
     // Ignore JSON parse error if body is empty
@@ -118,7 +127,8 @@ router.post('/:id/checkout', async (c) => {
   const { incomes } = await import('../db/schema');
   await db.insert(incomes).values({
     amount,
-    date: new Date().toISOString()
+    date: new Date().toISOString(),
+    note: note || null
   }).run();
 
   // Unlock vehicles

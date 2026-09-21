@@ -53,4 +53,5 @@ export const incomes = sqliteTable('incomes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   amount: integer('amount').notNull(),
   date: text('date').notNull(),
+  note: text('note'),
 });

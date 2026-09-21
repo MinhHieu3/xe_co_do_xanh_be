@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { incomes } from '../db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, gte, lte, and } from 'drizzle-orm';
 import ExcelJS from 'exceljs';
 import type { Env } from '../index';
 
@@ -9,9 +9,20 @@ const router = new Hono<{ Bindings: Env }>();
 
 router.get('/revenue', async (c) => {
   const db = drizzle(c.env.DB);
-  const result = await db.select().from(incomes).all();
+  const start = c.req.query('start');
+  const end = c.req.query('end');
+
+  const conditions = [];
+  if (start) conditions.push(gte(incomes.date, start));
+  if (end) conditions.push(lte(incomes.date, end));
+
+  let query: any = db.select().from(incomes);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
   
-  const totalRevenue = result.reduce((sum, inc) => sum + (inc.amount || 0), 0);
+  const result = await query.all();
+  const totalRevenue = result.reduce((sum: number, inc: any) => sum + (inc.amount || 0), 0);
   
   return c.json({
     success: true,
@@ -24,7 +35,19 @@ router.get('/revenue', async (c) => {
 
 router.get('/details', async (c) => {
   const db = drizzle(c.env.DB);
-  const result = await db.select().from(incomes).orderBy(desc(incomes.id)).all();
+  const start = c.req.query('start');
+  const end = c.req.query('end');
+
+  const conditions = [];
+  if (start) conditions.push(gte(incomes.date, start));
+  if (end) conditions.push(lte(incomes.date, end));
+
+  let query: any = db.select().from(incomes);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+
+  const result = await query.orderBy(desc(incomes.id)).all();
 
   return c.json({
     success: true,
@@ -35,7 +58,19 @@ router.get('/details', async (c) => {
 
 router.get('/export-excel', async (c) => {
   const db = drizzle(c.env.DB);
-  const result = await db.select().from(incomes).orderBy(desc(incomes.id)).all();
+  const start = c.req.query('start');
+  const end = c.req.query('end');
+
+  const conditions = [];
+  if (start) conditions.push(gte(incomes.date, start));
+  if (end) conditions.push(lte(incomes.date, end));
+
+  let query: any = db.select().from(incomes);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+
+  const result = await query.orderBy(desc(incomes.id)).all();
 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Bao Cao');
@@ -44,13 +79,15 @@ router.get('/export-excel', async (c) => {
     { header: 'ID', key: 'id', width: 10 },
     { header: 'Số Tiền', key: 'amount', width: 20 },
     { header: 'Thời Gian', key: 'date', width: 30 },
+    { header: 'Ghi Chú', key: 'note', width: 40 },
   ];
 
-  result.forEach(r => {
+  result.forEach((r: any) => {
     sheet.addRow({
       id: r.id,
       amount: r.amount,
       date: r.date,
+      note: r.note || '',
     });
   });
 
