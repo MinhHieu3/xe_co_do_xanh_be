@@ -48,3 +48,9 @@ export const rentals = sqliteTable('rentals', {
   des_2: text('des_2'),
   des_3: text('des_3'),
 });
+
+export const incomes = sqliteTable('incomes', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  amount: integer('amount').notNull(),
+  date: text('date').notNull(),
+});

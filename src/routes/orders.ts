@@ -114,15 +114,20 @@ router.post('/:id/checkout', async (c) => {
     return c.json({ success: false, message: 'Rental not found for this order' }, 404);
   }
 
-  await db.update(rentals)
-    .set({ payment: true, time_payment: new Date().toISOString(), amount })
-    .where(eq(rentals.id, rental.id))
-    .run();
+  // Record income
+  const { incomes } = await import('../db/schema');
+  await db.insert(incomes).values({
+    amount,
+    date: new Date().toISOString()
+  }).run();
 
+  // Unlock vehicles
   if (rental.vehicle_ids && rental.vehicle_ids.length > 0) {
     await db.update(vehicles).set({ status: false }).where(inArray(vehicles.id, rental.vehicle_ids)).run();
   }
 
+  // Delete rental and order
+  await db.delete(rentals).where(eq(rentals.id, rental.id)).run();
   await db.delete(orders).where(eq(orders.id, id_order)).run();
 
   return c.json({ success: true, message: 'Checkout successful' });
