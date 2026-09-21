@@ -1,0 +1,14 @@
+name = "co_do_xanh_v2"
+compatibility_date = "2024-08-17"
+compatibility_flags = [ "nodejs_compat" ]
+
+[vars]
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="password123"
+JWT_SECRET="supersecretkey"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "co_do_xanh_db"
+database_id = "df14be2f-8e2e-4685-9f24-16a1b0c53954"
+migrations_dir = "drizzle"

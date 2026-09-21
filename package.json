@@ -1,0 +1,29 @@
+{
+  "name": "co_do_xanh_v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply DB --local"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "exceljs": "^4.4.0",
+    "hono": "^4.13.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260817.1",
+    "@types/node": "^26.2.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.123.0"
+  }
+}

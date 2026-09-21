@@ -1,0 +1,1 @@
+ALTER TABLE `rentals` ADD `amount` integer DEFAULT 0;
