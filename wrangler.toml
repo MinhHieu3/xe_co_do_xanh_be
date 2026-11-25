@@ -10,6 +10,6 @@ JWT_SECRET="supersecretkey"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "co_do_xanh_db"
-database_id = "df14be2f-8e2e-4685-9f24-16a1b0c53954"
+database_name = "co_do_xanh_booking"
+database_id = "43e626d4-7782-40b0-8815-5700c5c67d86"
 migrations_dir = "drizzle"
